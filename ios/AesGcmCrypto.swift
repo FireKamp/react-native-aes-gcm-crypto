@@ -28,9 +28,14 @@ class AesGcmCrypto: NSObject {
         return decryptedData
     }
 
-    func encryptData(plainData: Data, key: Data) throws -> AES.GCM.SealedBox {
+    func encryptData(plainData: Data, key: Data, iv: String? = nil) throws -> AES.GCM.SealedBox {
         let skey = SymmetricKey(data: key)
-        return try AES.GCM.seal(plainData, using: skey)
+        if let iv = iv {
+            return try AES.GCM.seal(plainData, using: skey, nonce: AES.GCM.Nonce(data: Data(base64Encoded: iv)))
+        } else {
+            return try AES.GCM.seal(plainData, using: skey)
+        }
+        
     }
 
     @objc(decrypt:withKey:iv:tag:isBinary:withResolver:withRejecter:)
@@ -79,12 +84,12 @@ class AesGcmCrypto: NSObject {
         }
     }
 
-    @objc(encrypt:inBase64:withKey:withResolver:withRejecter:)
-    func encrypt(plainText: String, inBase64: Bool, key: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    @objc(encrypt:inBase64:withKey:iv:withResolver:withRejecter:)
+    func encrypt(plainText: String, inBase64: Bool, key: String, iv: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         do {
             let keyData = Data(base64Encoded: key)!
             let plainData = inBase64 ? Data(base64Encoded: plainText)! : plainText.data(using: .utf8)!
-            let sealedBox = try self.encryptData(plainData: plainData, key: keyData)
+            let sealedBox = try self.encryptData(plainData: plainData, key: keyData, iv: iv)
 
             let iv = sealedBox.nonce.withUnsafeBytes {
                 Data(Array($0)).hexadecimal
