@@ -31,7 +31,7 @@ class AesGcmCrypto: NSObject {
     func encryptData(plainData: Data, key: Data, iv: String? = nil) throws -> AES.GCM.SealedBox {
         let skey = SymmetricKey(data: key)
         if let iv = iv {
-            return try AES.GCM.seal(plainData, using: skey, nonce: AES.GCM.Nonce(data: Data(base64Encoded: iv)))
+            return try AES.GCM.seal(plainData, using: skey, nonce: AES.GCM.Nonce(data: Data(base64Encoded: iv)!))
         } else {
             return try AES.GCM.seal(plainData, using: skey)
         }
