@@ -1,6 +1,5 @@
 package com.reactnativeaesgcmcrypto
 
-import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 import java.io.File
@@ -41,7 +40,6 @@ class AesGcmCryptoModule(reactContext: ReactApplicationContext) : ReactContextBa
 
   fun encryptData(plainData: ByteArray, key: ByteArray, iv: ByteArray?): EncryptionOutput {
     val secretKey: SecretKey = getSecretKeyFromString(key)
-    Log.d("CRYPTO","making cypher")
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
     iv?.let {
       val s = IvParameterSpec(it)
@@ -51,12 +49,6 @@ class AesGcmCryptoModule(reactContext: ReactApplicationContext) : ReactContextBa
     }
 
     val actualIv = cipher.iv.copyOf()
-    Log.d("CRYPTO","running custom encrypt data")
-    Log.d("CRYPTO","iv size is" + actualIv.size)
-    Log.d("CRYPTO","key size is" + key.size)
-
-    Log.d("CRYPTO","actualIv is" + actualIv)
-
     val result = cipher.doFinal(plainData)
     val ciphertext = result.copyOfRange(0, result.size - GCM_TAG_LENGTH)
     val tag = result.copyOfRange(result.size - GCM_TAG_LENGTH, result.size)
@@ -122,11 +114,8 @@ class AesGcmCryptoModule(reactContext: ReactApplicationContext) : ReactContextBa
       val keyData = Base64.getDecoder().decode(key)
       val plainData = if (inBinary) Base64.getDecoder().decode(plainText) else plainText.toByteArray(Charsets.UTF_8)
       val ivData = Base64.getDecoder().decode(iv)
-      Log.d("CRYPTO","ivData is ${ivData?.size}")
-      Log.d("CRYPTO","data is ${ivData}")
       val sealed = encryptData(plainData, keyData, ivData)
       var response = WritableNativeMap()
-      Log.d("CRYPTO","about to return func")
       response.putString("iv", sealed.iv.toHex())
       response.putString("tag", sealed.tag.toHex())
       response.putString("content", Base64.getEncoder().encodeToString(sealed.ciphertext))
